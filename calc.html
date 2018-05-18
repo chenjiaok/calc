@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	<meta charset="UTF-8">
+	<title>网页计算器</title>
+		<style>
+			*{margin:0;padding:0;font-family:"微软雅黑";}
+			#calc{
+				width: 290px;
+				height: 500px;
+				border: 1px solid #d3d3d3;
+				margin: 20px auto;
+			}
+			.head{
+				width: 280px;
+				height: 20px;
+				padding: 5px 0 0 10px;
+				font-size: 14px;
+				line-height: 17px;
+				
+			}
+			.nav{
+				width: 280px;
+				height: 0px;
+				padding: 5px 0 0 10px;
+				font-size: 18px;
+				line-height: 20px;
+				
+			}
+
+			input{
+				width: 60px;
+				height: 50px;
+				font-size: 18px;
+				text-align: center;
+				color: #ddd;
+				background: #222;
+			}	
+			input:hover{
+				background: #888;  
+			}
+			#result{    
+				width: 250px;
+				height: 50px;
+				padding: 5px 20px 5px 20px;
+				border: 0;
+				font-size: 14px;
+				line-height: 50px;
+				text-align: right;
+				color: #000;
+				background: #fff;
+			}	
+			td{
+				padding: 5px;
+			}
+		</style>
+		<script src="../js/jquery-3.2.1.js"></script>
+	</head>
+	<body>
+		<div id="calc">
+			<p class="head">计算器</p>
+			<p class="nav"><b>标准</b></p>
+			<!--结果显示区域-->
+			<input id="result" type="text" value="0">
+			<!--按键区域-->
+			<table  class="calcbody" border=0>
+				<tr>
+					<td><input type="button" value="%" ></td>
+					<td><input type="button" value="√" ></td>
+					<td><input type="button" value="x²" ></td>
+					<td><input type="button" value="1/x" ></td>
+				</tr>
+				<tr>
+					<td><input type="button" value="CE" ></td>
+					<td><input type="button" value="C" ></td>
+					<td><input type="button" value="<-" ></td>
+					<td><input type="button" value="/" ></td>
+				</tr>
+				<tr>
+					<td><input type="button"  value="7" ></td>
+					<td><input type="button"  value="8" ></td>
+					<td><input type="button"  value="9" ></td>
+					<td><input type="button"  value="*" ></td>
+				</tr>
+				<tr>
+					<td><input type="button"  value="4" ></td>
+					<td><input type="button"  value="5" ></td>
+					<td><input type="button"  value="6" ></td>
+					<td><input type="button"  value="-" ></td>
+				</tr>
+				<tr>
+					<td><input type="button"  value="1" ></td>
+					<td><input type="button"  value="2" ></td>
+					<td><input type="button"  value="3" ></td>
+					<td><input type="button"  value="+" ></td>
+				</tr>
+				<tr>
+					<td><input type="button"  value="±"  ></td>
+					<td><input type="button"  value="0" ></td>
+					<td><input type="button"  value="." ></td>
+					<td><input type="button"  value="=" ></td>
+				</tr>
+			</table>
+		</div>
+	<script>
+
+		var signflag = 0;		//运算标志位
+		var result   = '0'; 	//结果
+		var obj;  			//当前按键值
+
+		$('input[type="button"]').click(function (){
+			obj = this.value;					//获取当前按键内容
+			switch (obj){						//判断内容，并转到相应的处理函数
+			
+				case '=':  ceshi();      break;	//四则运算    
+				case '±':  relative();   break;	//正负
+				case '<-': back();       break;	//后退（删除一个字符）
+				case 'CE': ccc();        break;	//清零
+				case 'C':  ccc();        break;	//清零
+				case '%':  percent();    break;	//百分数
+				case '√':  operate();    break;	//开方
+				case 'x²': power();      break;	//平方
+				case '1/x':denominator();break;	//倒数
+				default:   update();     break;	//更新需要运算的字符串
+			}
+		});
+		
+			
+		function update(){								//更新需要运算的字符串,并判断符号是否非法
+			result = result.toString();					//把当前结果转换为字符串
+			var dp = result.lastIndexOf('/');				//最后一个除号
+			var mp = result.lastIndexOf('*');  			//最后一个乘号
+			var rp = result.lastIndexOf('-');  			//最后一个减号
+			var ap = result.lastIndexOf('+');  			//最后一个加号
+			var p  = Math.max(dp,mp,rp,ap)+1;				//最后一个符号的位置
+			var l  = result.length;						//当前显示内容的长度
+			if (Number(result)!=0){						//当前显示不等于0
+				if(signflag==0){							//未进行运算
+					if(result.indexOf('.')>-1 && obj=='.'&&result.lastIndexOf('.')>p){	//判断小数点使用是否正确
+						alert('当前显示已包含小数点，小数点使用错误，请输入数字或者清零后重新开始');
+					}
+					else if(p==l && obj=='/'){				//判断除号使用是否正确
+						alert('运算符号 / 使用错误，请输入数字或者清零后重新开始');
+					}
+					else if(p==l && obj=='*'){				//判断乘号使用是否正确
+						alert('运算符号 * 使用错误，请输入数字或者清零后重新开始');
+					}
+					else if(p==l && obj=='-'){				//判断减号使用是否正确
+						alert('运算符号 - 使用错误，请输入数字或者清零后重新开始');
+					}
+					else if(p==l && obj=='+'){				//判断加号使用是否正确
+						alert('运算符号 + 使用错误，请输入数字或者清零后重新开始');
+					}
+					else if(obj=='/'||'*'||'-'||'+'){
+						result = result + obj;				//符号直接添加至当前显示内容
+					}
+					else result = result + obj;				//以上无误，点击数字添加至当前显示内容
+				}
+				else if(signflag ==1){					//已进行运算
+					if(result.indexOf('.')>-1 && obj=='.'&&result.lastIndexOf('.')<p){	//判断小数点使用是否正确
+						alert('上一步计算结果已经有小数点，小数点使用错误,请输入数字或者清零后重新开始');
+					}
+					else if((obj=='/')||(obj=='*')||(obj=='-')||(obj=='+')){
+						result = result + obj;				//符号直接添加至当前显示内容
+					}
+					else
+						result = obj;							//以上无误，点击数字添加至当前显示内容
+					signflag = 0;							//运算标志位清零
+				} 
+			}else if(Number(result) ==0){ 						//当前显示为0  
+				if(result.indexOf('.')==-1 && obj!='.'){		//当前显示不包含小数点，且点击数字不是小数点
+					result = obj;  								//显示点击的数字
+				}
+				else if(result.indexOf('.')==-1 && obj=='.'){	//当前显示不包含小数点，且点击数字是小数点
+					result =result+ obj;  						//显示‘0.’
+				}
+				else if(result.indexOf('.')>-1 && obj=='.'){	//当前显示包含小数点，且点击数字是小数点
+					alert('上一步结果已经有小数点，小数点使用错误,请输入数字或者清零后重新开始');
+				}
+				else if(result.indexOf('.')>-1 && obj!='.'){	//当前显示包含小数点，且点击数字不是小数点
+					result = result + obj;
+				}
+			}
+			document.getElementById("result").value = result;
+			if( result.length>33){alert('显示空间不足，请先计算部分内容');}
+		}
+			
+		function back(){								//删除最后一个字符
+			result = result.toString();					//显示内容转换为字符串
+			if(result.length >1){
+				result = result.slice(0,result.length-1);	//长度大于1，删除最后一位
+			}  
+			else if(result.length ==1){
+				result = '0';								//长度为1，清零
+			}
+			document.getElementById("result").value = result;
+		}
+
+		function ccc(){									//清除result
+			result = '0';
+			document.getElementById("result").value = result;
+		}
+
+		function relative(){							//正负一次
+
+			var dp   = result.indexOf('/');				//除号位置
+			var mp   = result.indexOf('*');				//乘号位置
+			var rp   = result.lastIndexOf('-');			//减号位置
+			var ap   = result.lastIndexOf('+');			//加号位置
+			if(ap >-1){									//判断是否包含科学计数法
+				if(Number(result)>10000000000000000||Number(result)<-9999999999999999){		//科学计数直接计算
+					document.getElementById("result").value = -document.getElementById("result").value;
+					result = result.toString();		 		//显示结果始终是字符串
+					document.getElementById("result").value = result;
+				}
+				else alert('请先进行四则运算');				//包含加减法
+			}   
+			else if(dp+mp+2 ==0){							//不包含乘除法，直接运算
+				result = Number(result);
+				document.getElementById("result").value = -document.getElementById("result").value;
+				result = result.toString();					//显示结果始终是字符串
+				document.getElementById("result").value = result;
+			}
+			else alert('请先进行四则运算');				//包含减乘除法
+				signflag = 1;
+		}
+			
+		function percent() {							//百分数
+			result = result + '%';
+				
+			var pindex = result.indexOf('%');				//百分号位置		
+			var dp 	   = result.lastIndexOf('/');		//最后一个除号
+			var mp	   = result.lastIndexOf('*');		//最后一个乘号
+			var rp	   = result.lastIndexOf('-');		//最后一个减号
+			var ap	   =result.lastIndexOf('+');		//最后一个加号
+			var p	   	= Math.max(dp,mp,rp,ap);				//最后一个符号的位置
+			if (p==-1){
+				result=Number(result.slice(0,pindex))/100;	//无运算符号
+				result = result.toString();
+			}
+			else {										//百分号之前的数字/100
+				result = result.slice(0,p+1) + Number(result.slice(p+1,pindex))/100;
+			}	
+			if( result.length>33){alert('显示空间不足，请先计算部分内容');}
+			else 
+				document.getElementById("result").value = result;
+			result = result.toString();
+			signflag = 1;
+		}
+
+		function operate(){								//开平方
+
+			var dp   = result.indexOf('/');				//除号位置
+			var mp   = result.indexOf('*');				//乘号位置
+			var rp   = result.lastIndexOf('-');			//减号位置
+			var ap   = result.lastIndexOf('+');			//加号位置
+			if(ap >-1){									//判断是否包含科学计数法
+				if(Number(result)>10000000000000000||Number(result)<-9999999999999999){		//科学计数直接计算
+					result = Math.sqrt(result);
+					result = result.toString();		 		//显示结果始终是字符串
+					document.getElementById("result").value = result;
+				}
+				else alert('请先进行四则运算');				//包含加减法
+			}   
+			else if(dp+mp+2 ==0){							//不包含乘除法，直接运算
+				result = Number(result);
+				result = Math.sqrt(result);
+				result = result.toString();					//显示结果始终是字符串
+				document.getElementById("result").value = result;
+			}
+			else alert('请先进行四则运算');				//包含减乘除法
+			signflag = 1;
+		}
+
+		function power(){								//平方
+
+			var dp   = result.indexOf('/');				//除号位置
+			var mp   = result.indexOf('*');				//乘号位置
+			var rp   = result.lastIndexOf('-');			//减号位置
+			var ap   = result.lastIndexOf('+');			//加号位置
+			if(ap >-1){									//判断是否包含科学计数法
+				if(Number(result)>10000000000000000||Number(result)<-9999999999999999){		//科学计数直接计算
+					result = result * result;
+					result = result.toString();		 		//显示结果始终是字符串
+					document.getElementById("result").value = result;
+				}
+				else alert('请先进行四则运算');				//包含加减法
+			}   
+			else if(dp+mp+2 ==0){							//不包含乘除法，直接运算
+				result = Number(result);
+				result = result * result;
+				result = result.toString();					//显示结果始终是字符串
+				document.getElementById("result").value = result;
+			}
+			else alert('请先进行四则运算');				//包含减乘除法
+			signflag = 1;
+		}
+
+		function denominator(){							//倒数
+
+			result = 1 / result;
+			result = result.toString();					//显示结果始终是字符串
+			document.getElementById("result").value = result;
+			signflag = 1;
+		}
+
+		
+		var resu  = 0,
+			temp  = 0,
+			tempm = 0;
+		var sign   = Array(),
+			numarr = Array(),
+			arr    = Array(),
+			signs  = Array();
+		function ceshi(){								//进行运算
+			
+			var num2 = 0,
+				num3 = 0,
+				num4 = 0,
+				num5 = 0;
+			num2   = division(result);
+			num3   = multiplication(num2);
+			num4   = subduction(num3);
+			num5   = addition(num4);
+			result = temp + Number(num5);
+			console.log()
+			result = Number(result)
+			if(isNaN(result)){
+				alert('计算结果超出范围，请重新输入');			//结果为NAN
+			}
+			else{
+				result = result.toString();						//显示结果始终是字符串
+				document.getElementById("result").value = result;
+			}   
+			signflag = 1;
+			temp     = 0;
+		}
+
+		function arange(num1){  							//整理数据，取出数字和符号
+			num1 = num1.toString();
+			var t  = 0, 
+				k  = 0, 
+				k1 = 0, 
+				s  = 0;
+			for (var i = 0;i<num1.length;i++){				//取出符号sign[]
+				arr[i] = num1.slice(i,i+1);
+				if( arr[i] == '/'|| arr[i] == '*' || arr[i] == '-' || arr[i] == '+'){
+					sign[i]    = arr[i];								
+					signs[i-k] = arr[i];							
+				}
+				else k++;										
+			}	
+			for(s=0;s<num1.length;s++){					//根据符号取出数字numarr[]
+				if( typeof sign[s] == 'string'){
+					numarr[s-k1] = num1.slice(t,s);
+					t            = s+1;
+				}
+				else k1++;
+			}
+			var aaa      = num1.length;
+			numarr[s-k1] = num1.slice(t,aaa);
+			num = 0;
+			k   = 0;
+			k1  = 0;
+			t   = 0;
+			s   = 0;
+		} 
+			
+		function division(num1){ 						//除法
+			var tempm = Array();
+			var x = 0;
+				j = 0;
+				c = 0;
+			arange(num1);
+			while (x<num1.length && j<signs.length && num1.lastIndexOf('/')!=-1){
+				if (sign[x] == '/'){
+				if (signs[j] == '/'){
+					var b1 = numarr[j].length-numarr[j].indexOf('.')-1,
+						b2 = numarr[j+1].length-numarr[j+1].indexOf('.')-1,
+						b3 = Math.max(b1,b2),
+						b  =Math.pow(10,b3);
+					if(b3>10){alert('计算精度有限，当前结果仅供参考');} 
+					tempm = (Math.round(Number(numarr[j]) * b / Number(numarr[j+1])*b))/b/b;
+					num1 = num1.slice(0,x-numarr[j].length) + tempm + num1.slice(1+x+numarr[j+1].length,num1.length);
+					x++;
+					j++;
+					sign   = Array();
+					numarr = Array();
+					arr    = Array();
+					signs  = Array();
+					x = 0;
+					j = 0;
+					arange(num1);
+				}
+				else {j++;} 
+				}
+				else {x++;}
+			}	
+			return num1; 
+		}
+
+		function multiplication(num1){ 					//乘法
+			var x = 0;
+				j = 0;
+			arange(num1);
+			while (x<num1.length && j<signs.length && num1.indexOf('*') != -1){
+				if (sign[x] == '*'){
+				if (signs[j] == '*'){
+					var b1 = numarr[j].length-numarr[j].indexOf('.')-1,
+						b2 = numarr[j+1].length-numarr[j+1].indexOf('.')-1,
+						b3 = Math.max(b1,b2),
+						b  =Math.pow(10,b3);
+					if(b3>10){alert('计算精度有限，当前结果仅供参考');}	  
+				//(Math.round(Number(numarr[j])*b + Number(numarr[j+1])*b))/b;
+					tempm = (Math.round(Number(numarr[j])*b * Number(numarr[j+1])*b))/b/b;
+					num1  = num1.slice(0,x-numarr[j].length) + tempm+num1.slice(1+x+numarr[j+1].length,num1.length);
+					x++;
+					j++;
+					sign   = Array();
+					numarr = Array();
+					arr    = Array();
+					signs  = Array();
+					x = 0;
+					j = 0;
+					arange(num1);
+					}
+					else {j++;}
+				}
+				else {x++;}
+				}
+				return num1;  
+		}
+
+		function subduction(num1){    					//减法
+			var x = 0,
+				j = 0;
+			arange(num1);
+			while((x<num1.length) && (j<signs.length) && num1.indexOf('-')!=-1){ //x:符号的位数，j第几个数/符号
+				if(signs[j] == '-'){
+				if(sign[x] == '-'){
+					var b1 = numarr[j].length-numarr[j].indexOf('.')-1,
+						b2 = numarr[j+1].length-numarr[j+1].indexOf('.')-1,
+						b3 = Math.max(b1,b2),
+						b  =Math.pow(10,b3);
+					if(b3>10){alert('计算精度有限，当前结果仅供参考');}	 
+					tempm = -Math.round(Number(numarr[j+1])*b - Number(numarr[j])*b)/b;
+					if(tempm<0 && j==0){
+					num1 = 0 + num1.slice(0,x-numarr[j].length) + num1.slice(x+numarr[j+1].length+1,num1.length);
+					temp = temp + tempm;
+					} 
+					else if(tempm<0 && j>0){
+					num1 = num1.slice(0,x-numarr[j].length-1) + num1.slice(x+numarr[j+1].length+1,num1.length);
+					temp = temp + tempm; 
+					}
+					else if(tempm>=0){
+					num1 = num1.slice(0,x-numarr[j].length) + tempm+num1.slice(1+x+numarr[j+1].length,num1.length);}
+					x++;
+					j++;
+					sign   = Array();  
+					numarr = Array();  
+					arr    = Array(); 
+					signs  = Array();
+					x = 0;
+					j = 0;
+					arange(num1);
+					}
+					else { x++;  } 
+				}
+				else { j++; } 
+				}
+			return num1;
+		}
+
+		function addition(num1){ 						//加法
+			var x = 0,
+				j = 0;
+			arange(num1);
+			
+			while (x<num1.length && j<signs.length && num1.indexOf('+') != -1){
+				if (sign[x] == '+'){
+				if (signs[j] == '+'){
+					var b1 = numarr[j].length-numarr[j].indexOf('.')-1,
+						b2 = numarr[j+1].length-numarr[j+1].indexOf('.')-1,
+						b3 = Math.max(b1,b2),
+						b  =Math.pow(10,b3);
+						console.log(b,b1,b2,b3)
+					if(b3>10){alert('计算精度有限，当前结果仅供参考');}
+					tempm = (Math.round(Number(numarr[j])*b + Number(numarr[j+1])*b))/b;
+					num1  = num1.slice(0,x-numarr[j].length) + tempm+num1.slice(1+x+numarr[j+1].length,num1.length);
+					
+					x++;
+					j++;
+					sign   = Array();
+					numarr = Array();
+					arr    = Array();
+					signs  = Array();
+					x = 0;
+					j = 0;
+					arange(num1);
+				}
+				else {j++;}
+				}
+				else {x++;}
+			} 
+			return num1;
+		}
+		
+		</script>
+	</body>
+</html>
